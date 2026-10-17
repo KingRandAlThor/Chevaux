@@ -1,0 +1,38 @@
+name: chevaux-bot
+on:
+  schedule:
+    - cron: "5 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      revive:
+        description: "Ressusciter le bot (solde remis à BANKROLL)"
+        default: "0"
+concurrency: chevaux-bot
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - run: pip install -r requirements.txt
+      - name: Restaurer la base du bot (solde, paris)
+        uses: actions/cache@v4
+        with:
+          path: bot.db
+          key: chevaux-bot-${{ github.run_id }}
+          restore-keys: chevaux-bot-
+      - name: Daemon Telegram
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT: ${{ secrets.TELEGRAM_CHAT }}
+          BANKROLL: ${{ vars.BANKROLL }}
+          DAEMON_MINUTES: "345"
+          CYCLE_MIN: "20"
+          REVIVE: ${{ github.event.inputs.revive }}
+        run: python -m chevaux.bot daemon
