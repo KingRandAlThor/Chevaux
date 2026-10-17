@@ -6,7 +6,7 @@ Bot Telegram pour les courses hippiques françaises (PMU), sur le modèle de Mou
 
 ## Règles
 - Mise max : 6 % du solde par pari.
-- Le bot « meurt » si le solde atteint 0, ou si aucun pari n'est confirmé (✅ Placé) entre 12h et 14h (heure de Paris). Il propose un pari dès 9h.
+- Le bot « meurt » uniquement si le solde atteint 0 (pas de mort si tu ne paries pas). Un pari t'est proposé chaque jour dès 9h, avant la fenêtre 12h-14h.
 - `solde 10` pour le relancer.
 
 ## Commandes Telegram

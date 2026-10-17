@@ -114,13 +114,13 @@ def test_death_when_balance_zero(con):
     assert "mort" in bot.handle_text(con, "pari", dt.datetime(2026, 1, 1, 10, tzinfo=TZ), lambda n: [])
 
 
-def test_mission_proposes_then_dies(con):
+def test_mission_proposes_but_no_death_without_bet(con):
     day = dt.date(2026, 1, 1)
     races = lambda n: [mk_race(i, n.timestamp() + 900 * (i + 1)) for i in range(4)]
     bot.mission_step(con, dt.datetime.combine(day, dt.time(9, 5), TZ), races)
     assert con.execute("SELECT COUNT(*) FROM bets WHERE status='proposed'").fetchone()[0] == 1
-    bot.mission_step(con, dt.datetime.combine(day, dt.time(14, 30), TZ), races)  # rien placé -> mort
-    assert bot.bankroll(con)[1] is True
+    bot.mission_step(con, dt.datetime.combine(day, dt.time(14, 30), TZ), races)  # rien placé : pas de mort
+    assert bot.bankroll(con)[1] is False
 
 
 def test_mission_survives_if_placed_in_window(con):

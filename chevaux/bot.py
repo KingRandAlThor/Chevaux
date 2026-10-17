@@ -287,12 +287,8 @@ def mission_step(con, now, races_fn=get_upcoming):
         propose_single(con, now, races_fn(now), forced=True)
     if s <= ts < e and meta_get(con, "mission_reminded") != key and not mission_done(con, day):
         meta_set(con, "mission_reminded", key)
-        tg_send(f"🚨 Mission : confirme (✅ Placé) un pari entre {CFG['MISSION_FROM']}h et {CFG['MISSION_TO']}h, "
-                "sinon je meurs !")
-    if ts >= e + float(CFG["MISSION_GRACE_MIN"]) * 60 and meta_get(con, "mission_checked") != key \
-            and not mission_done(con, day) and ts < e + 6 * 3600:
-        meta_set(con, "mission_checked", key)
-        die(con, "💀 Aucun pari placé entre %sh et %sh : le bot meurt." % (CFG["MISSION_FROM"], CFG["MISSION_TO"]))
+        tg_send(f"🕛 Rappel : un pari est proposé pour la fenêtre {CFG['MISSION_FROM']}h-{CFG['MISSION_TO']}h "
+                "(aucune pénalité si tu ne joues pas).")
 
 
 # ---------- chat ----------
@@ -343,17 +339,9 @@ def handle_text(con, text, now=None, races_fn=get_upcoming):
         return ("💀 Solde : 0 € (mort). Envoie « solde 10 » pour relancer." if dead else
                 f"💰 Solde : {bank:.2f} € | mise max : {bank * MAX_STAKE_PCT:.2f} €\n{stats_line(con)}")
     if re.search(r"\b(mission|aujourd|12h|14h|vivant|mort)\b", t):
-        day = now.astimezone(TZ).date()
-        s, e = win_bounds(day)
         if dead:
-            return "💀 Je suis mort. Envoie « solde 10 » pour me relancer."
-        if mission_done(con, day):
-            return "✅ Mission du jour accomplie."
-        if now.timestamp() < s:
-            return f"🕛 Il faudra placer un pari entre {CFG['MISSION_FROM']}h et {CFG['MISSION_TO']}h."
-        if now.timestamp() < e:
-            return f"🚨 Mission en cours : encore {int((e - now.timestamp()) / 60)} min !"
-        return "Fenêtre d'aujourd'hui terminée."
+            return "💀 Je suis mort (solde à 0). Envoie « solde 10 » pour me relancer."
+        return "✅ Je suis vivant. Je ne meurs que si le solde tombe à 0. Un pari t'est proposé chaque jour avant 12h-14h."
     if re.search(r"\b(mes paris|historique|resultats?)\b", t):
         rows = con.execute("SELECT label, odd, stake, status, payout FROM bets WHERE status IN ('placed','won','lost') "
                            "ORDER BY id DESC LIMIT 10").fetchall()
